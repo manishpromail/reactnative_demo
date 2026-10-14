@@ -34,7 +34,7 @@ export const BackendSelectionScreen: React.FC<BackendSelectionScreenProps> = ({
   onGoBack,
 }) => {
   const { checkAuthStatus } = useAuth();
-  const { fetchProducts } = useProducts();
+  const { fetchProducts, fetchCategories } = useProducts();
 
   const storage = StorageHelper.getInstance();
   const currentBackend = storage.getSelectedBackend() || ApiConstants.activeBackend;
@@ -105,6 +105,7 @@ export const BackendSelectionScreen: React.FC<BackendSelectionScreenProps> = ({
       // Refresh authentication & product streams for new backend
       await checkAuthStatus();
       fetchProducts();
+      fetchCategories();
 
       if (onFinished) {
         onFinished();

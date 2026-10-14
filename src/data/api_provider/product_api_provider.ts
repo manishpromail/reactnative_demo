@@ -1,5 +1,5 @@
 import { AxiosInstance } from 'axios';
-import { ApiConstants } from '../../core/constants/api_constants';
+import { ApiConstants, BackendType } from '../../core/constants/api_constants';
 import { NetworkHandling } from '../../core/network/network_handling';
 import { CategoryModel } from '../../features/products/data/category_model';
 import { ProductModel } from '../../features/products/data/product_model';
@@ -187,6 +187,12 @@ export class ProductApiProvider {
    * Fetch all categories (M:M relationship lookup)
    */
   async getCategories(): Promise<DataResponse<CategoryModel[]>> {
+    // MongoDB is a NoSQL document store that does not have the relational categories table/routes.
+    // Categories are supported on the Supabase (PostgreSQL) backend.
+    if (ApiConstants.activeBackend === BackendType.MONGODB) {
+      return DataResponse.success([], 'Categories are available on the Supabase PostgreSQL backend');
+    }
+
     try {
       const response = await this.axios.get(ApiConstants.categories, {
         headers: Injector.getHeaderToken(),
@@ -207,6 +213,11 @@ export class ProductApiProvider {
         response.status
       );
     } catch (e) {
+      // If 404 (endpoint not present on backend), return empty list gracefully
+      if (NetworkHandling.getStatusCode(e) === 404) {
+        return DataResponse.success([], 'Categories endpoint not available on this backend');
+      }
+
       return DataResponse.failure<CategoryModel[]>(
         NetworkHandling.getErrorMessage(e),
         undefined,

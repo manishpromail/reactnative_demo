@@ -3,7 +3,7 @@ import { View, ActivityIndicator, StyleSheet } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
-import { ApiConstants } from './src/core/constants/api_constants';
+import { ApiConstants, BackendType } from './src/core/constants/api_constants';
 import { Colors } from './src/core/theme/colors';
 import { Injector } from './src/data/injector';
 import { StorageHelper } from './src/utils/helper/storage_helper';
@@ -134,18 +134,15 @@ export default function App() {
       await StorageHelper.init();
 
       const storage = StorageHelper.getInstance();
-      const hasBackend = storage.hasSelectedBackend();
 
-      if (hasBackend) {
-        const savedBackend = storage.getSelectedBackend();
-        if (savedBackend) {
-          const customUrl = storage.getCustomBackendUrl(savedBackend);
-          ApiConstants.setBackend(savedBackend, customUrl);
-          Injector.updateBaseUrl();
-        }
-      } else {
-        setInitialSetupNeeded(true);
-      }
+      // Default active backend to Supabase (PostgreSQL)
+      const savedBackend = storage.getSelectedBackend();
+      const activeType = savedBackend === BackendType.MONGODB ? BackendType.SUPABASE : (savedBackend ?? BackendType.SUPABASE);
+      const customUrl = storage.getCustomBackendUrl(activeType);
+
+      await storage.saveSelectedBackend(activeType);
+      ApiConstants.setBackend(activeType, customUrl);
+      Injector.updateBaseUrl();
 
       setIsReady(true);
     }
