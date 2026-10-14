@@ -59,5 +59,14 @@ export class ApiConstants {
   static readonly login = '/api/auth/login';
   static readonly profile = '/api/auth/me';
   static readonly products = '/api/products';
+  static readonly categories = '/api/categories';
+  static readonly schemaInfo = '/api/schema/relationships';
+  static productDetail(id: string | number): string {
+    return `/api/products/${id}`;
+  }
+  static productReviews(id: string | number): string {
+    return `/api/products/${id}/reviews`;
+  }
   static readonly health = '/api/health';
 }
+

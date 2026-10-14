@@ -16,14 +16,17 @@ import { LoginScreen } from './src/features/auth/presentation/login_screen';
 import { SignupScreen } from './src/features/auth/presentation/signup_screen';
 import { HomeProductsScreen } from './src/features/products/presentation/home_products_screen';
 import { AddProductScreen } from './src/features/products/presentation/add_product_screen';
+import { ProductDetailsScreen } from './src/features/products/presentation/product_details_screen';
 
-type ActiveView = 'auth_gate' | 'signup' | 'add_product' | 'backend_selection';
+type ActiveView =
+  | 'auth_gate'
+  | 'signup'
+  | 'add_product'
+  | 'backend_selection'
+  | 'product_detail';
 
 /**
- * AuthGate component directly mirroring Flutter's AuthGate widget:
- * - If Authenticated -> HomeProductsScreen
- * - If Unauthenticated -> LoginScreen
- * - If Initial / Loading -> Center ActivityIndicator
+ * AppNavigator managing navigation across Auth, Products, and Relational Screens.
  */
 const AppNavigator: React.FC<{
   initialSetupNeeded: boolean;
@@ -33,6 +36,7 @@ const AppNavigator: React.FC<{
   const [activeView, setActiveView] = useState<ActiveView>(
     initialSetupNeeded ? 'backend_selection' : 'auth_gate'
   );
+  const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
   const [isInitialConfig, setIsInitialConfig] = useState(initialSetupNeeded);
 
   // If user is currently in initial backend setup
@@ -68,6 +72,16 @@ const AppNavigator: React.FC<{
     );
   }
 
+  // Product Details Screen (1:1 specs, 1:M reviews, M:M categories)
+  if (activeView === 'product_detail' && selectedProductId) {
+    return (
+      <ProductDetailsScreen
+        productId={selectedProductId}
+        onGoBack={() => setActiveView('auth_gate')}
+      />
+    );
+  }
+
   // Signup Screen
   if (activeView === 'signup') {
     return (
@@ -91,6 +105,10 @@ const AppNavigator: React.FC<{
       <HomeProductsScreen
         onOpenBackendSwitch={() => setActiveView('backend_selection')}
         onOpenAddProduct={() => setActiveView('add_product')}
+        onOpenProductDetail={(id) => {
+          setSelectedProductId(id);
+          setActiveView('product_detail');
+        }}
       />
     );
   }
@@ -105,7 +123,7 @@ const AppNavigator: React.FC<{
 };
 
 /**
- * Root Application Component directly equivalent to Flutter's `void main()` and `MyApp`.
+ * Root Application Component
  */
 export default function App() {
   const [isReady, setIsReady] = useState(false);
@@ -113,7 +131,6 @@ export default function App() {
 
   useEffect(() => {
     async function initializeApp() {
-      // Equivalent to: WidgetsFlutterBinding.ensureInitialized(); await StorageHelper.init();
       await StorageHelper.init();
 
       const storage = StorageHelper.getInstance();
@@ -147,7 +164,6 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <StatusBar style="auto" />
-      {/* Equivalent to MultiBlocProvider in Flutter */}
       <AuthProvider>
         <ProductProvider>
           <AppNavigator
